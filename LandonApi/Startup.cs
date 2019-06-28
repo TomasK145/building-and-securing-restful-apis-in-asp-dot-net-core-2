@@ -25,12 +25,16 @@ namespace LandonApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //na poradi definovania servisou v tejto metode nazalezi
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddRouting(options => options.LowercaseUrls = true); //vsetky vygenerovane URL budu lowercase
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            //na poradi definovania zalezi, definuje poradie vykonavania middleware pipeliny
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
