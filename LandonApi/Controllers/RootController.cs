@@ -11,11 +11,17 @@ namespace LandonApi.Controllers
     public class RootController : ControllerBase //pre web api je vhodne dedit od ControllerBase --> chybaju funkcionality pre view, razor, ... ktore su definovane v triede Controller (aj tato dedi od ControllerBase)
     {
         [HttpGet(Name = nameof(GetRoot))]
+        [ProducesResponseType(200)] //nie je potrebny atribut, vhodny ale pre pouzitie pre Swagger
         public IActionResult GetRoot()
         {
+            //vyuzivana ION JSON specifikacia (https://ionspec.org/)
             var response = new
             {
-                href = Url.Link(nameof(GetRoot), null) //generovanie absolute path
+                href = Url.Link(nameof(GetRoot), null), //generovanie absolute path
+                rooms = new
+                {
+                    href = Url.Link(nameof(RoomsController.GetRooms), null)
+                }
             };
             return Ok(response);
         }
