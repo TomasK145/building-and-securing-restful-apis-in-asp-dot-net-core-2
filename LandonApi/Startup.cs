@@ -32,6 +32,7 @@ namespace LandonApi
             services.AddMvc(options => 
                     {
                         options.Filters.Add<JsonExceptionFilter>(); //zareferencovanie custom filtra
+                        options.Filters.Add<RequireHttpsOrCloseAttribute>();
                     })
                     .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                     .AddJsonOptions(options => 
@@ -54,6 +55,11 @@ namespace LandonApi
                 options.ReportApiVersions = true; //vramci response je zahrnuta info o verzii API
                 options.ApiVersionSelector = new CurrentImplementationApiVersionSelector(options);
             });
+
+            services.AddCors(options => 
+            {
+                options.AddPolicy("AllowMyApp", policy => policy.AllowAnyOrigin()); //pre DEV ucely je mozne pouzit rozny origin (AllowAnyOrigin), pre PROD to musi byt upravene
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,7 +81,9 @@ namespace LandonApi
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            app.UseCors("AllowMyApp"); //applikovanie CORS policy, musi byt definovane pred middlewarom ktory vytvara response (pr. UseMVC)
+
+            //app.UseHttpsRedirection(); //zabezpecuje automaticky redirect ak sa klient snazi pristupovat na server cez HTTP port (redirect na HTTPS port)
             app.UseMvc();
         }
     }
