@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LandonApi.Filters;
+using LandonApi.Models;
+using LandonApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -28,6 +31,14 @@ namespace LandonApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<HotelInfo>(Configuration.GetSection("Info")); //zabezpeci vytvorenie a naplnneie objektu triedy "HotelInfo" s datami z appsettings.json suboru zo sekcie Info
+
+            services.AddScoped<IRoomService, DefaultRoomService>(); //definovanie pre DI, DefaultRoomService bude injektovane pre kazdy incomming request
+
+            //Use in-memory database for quick dev and testing
+            //TODO: swap out for real DB in PROD
+            services.AddDbContext<HotelApiDbContext>(options => options.UseInMemoryDatabase("landondb")); //pre DEV ucely je pouzita in-memory DB
+
             //na poradi definovania servisou v tejto metode nazalezi
             services.AddMvc(options => 
                     {
