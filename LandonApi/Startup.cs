@@ -33,6 +33,7 @@ namespace LandonApi
         {
             services.Configure<HotelInfo>(Configuration.GetSection("Info")); //zabezpeci vytvorenie a naplnneie objektu triedy "HotelInfo" s datami z appsettings.json suboru zo sekcie Info
 
+            //EF core triedy su casto Scoped, preto aj ine ktore s nimi interaguju by mali byt scoped
             services.AddScoped<IRoomService, DefaultRoomService>(); //definovanie pre DI, DefaultRoomService bude injektovane pre kazdy incomming request
 
             //Use in-memory database for quick dev and testing
