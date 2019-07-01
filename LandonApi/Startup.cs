@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using LandonApi.Filters;
+using LandonApi.Infrastructure;
 using LandonApi.Models;
 using LandonApi.Services;
 using Microsoft.AspNetCore.Builder;
@@ -72,6 +74,8 @@ namespace LandonApi
             {
                 options.AddPolicy("AllowMyApp", policy => policy.AllowAnyOrigin()); //pre DEV ucely je mozne pouzit rozny origin (AllowAnyOrigin), pre PROD to musi byt upravene
             });
+
+            services.AddAutoMapper(options => options.AddProfile<MappingProfile>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
