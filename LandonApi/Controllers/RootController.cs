@@ -8,6 +8,7 @@ namespace LandonApi.Controllers
 {
     [Route("/")] //URL na ktorej bude tento kontroller volany
     [ApiController] //info ze controller je urceny pre API, pridava feature ako automaticku model validaciu
+    [ApiVersion("1.0")] //definovanie verzie API
     public class RootController : ControllerBase //pre web api je vhodne dedit od ControllerBase --> chybaju funkcionality pre view, razor, ... ktore su definovane v triede Controller (aj tato dedi od ControllerBase)
     {
         [HttpGet(Name = nameof(GetRoot))]

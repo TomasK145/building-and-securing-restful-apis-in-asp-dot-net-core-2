@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LandonApi.Filters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -27,7 +29,10 @@ namespace LandonApi
         public void ConfigureServices(IServiceCollection services)
         {
             //na poradi definovania servisou v tejto metode nazalezi
-            services.AddMvc()
+            services.AddMvc(options => 
+                    {
+                        options.Filters.Add<JsonExceptionFilter>(); //zareferencovanie custom filtra
+                    })
                     .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                     .AddJsonOptions(options => 
                     {
@@ -40,6 +45,15 @@ namespace LandonApi
             // Add OpenAPI/Swagger document
             services.AddOpenApiDocument(); // registers a OpenAPI v3.0 document with the name "v1" (default)
             // services.AddSwaggerDocument(); // registers a Swagger v2.0 document with the name "v1" (default)
+
+            services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0); //definovanie defailt api verzie
+                options.ApiVersionReader = new MediaTypeApiVersionReader(); //zadefinovanie co bude zdrojom urcujucim verziu
+                options.AssumeDefaultVersionWhenUnspecified = true; //ak verzia nebude definovana ma byt predpokladana
+                options.ReportApiVersions = true; //vramci response je zahrnuta info o verzii API
+                options.ApiVersionSelector = new CurrentImplementationApiVersionSelector(options);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
