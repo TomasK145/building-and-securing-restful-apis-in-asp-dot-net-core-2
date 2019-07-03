@@ -23,7 +23,7 @@ namespace LandonApi.Controllers
         [ProducesResponseType(200)]
         public ActionResult<HotelInfo> GetInfo() //vyuzitie ActionResult namiesto IActionResult definuje ze bude navratenu z metody strongly-typed model
         {
-            _hotelInfo.Href = Url.Link(nameof(GetInfo), null);
+            //_hotelInfo.Self = Url.Link(nameof(GetInfo), null);
             return _hotelInfo;
         }
     }
