@@ -27,9 +27,9 @@ namespace LandonApi.Controllers
 
         [HttpGet(Name = nameof(GetAllRooms))]
         [ProducesResponseType(200)]
-        public async Task<ActionResult<Collection<Room>>> GetAllRooms()
+        public async Task<ActionResult<Collection<Room>>> GetAllRooms([FromQuery]SortOptions<Room, RoomEntity> sortOptions)
         {
-            var rooms = await _roomService.GetRoomsAsync();
+            var rooms = await _roomService.GetRoomsAsync(sortOptions);
 
             var collection = new Collection<Room>
             {
@@ -43,7 +43,8 @@ namespace LandonApi.Controllers
         [HttpGet("openings", Name = nameof(GetAllRoomOpenings))]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
-        public async Task<ActionResult<Collection<Opening>>> GetAllRoomOpenings([FromQuery]PagingOptions pagingOptions = null) //zadefinovanie ze hodnoty sa nachadzaju v query stringu
+        public async Task<ActionResult<Collection<Opening>>> GetAllRoomOpenings(
+            [FromQuery]PagingOptions pagingOptions = null) //zadefinovanie ze hodnoty sa nachadzaju v query stringu
         {
             pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
             pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;

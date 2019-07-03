@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using LandonApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LandonApi.Services
@@ -39,10 +40,11 @@ namespace LandonApi.Services
             return mapper.Map<Room>(entity);
         }
 
-        public async Task<IEnumerable<Room>> GetRoomsAsync()
+        public async Task<IEnumerable<Room>> GetRoomsAsync([FromQuery]SortOptions<Room, RoomEntity> sortOptions)
         {
-            var query = _context.Rooms.ProjectTo<Room>(_mappingConfiguration);
-            return await query.ToArrayAsync();
+            IQueryable<RoomEntity> query = _context.Rooms;
+            query = sortOptions.Apply(query); //zabezpecenie sortovania
+            return await query.ProjectTo<Room>(_mappingConfiguration).ToArrayAsync();
         }
     }
 }
