@@ -27,9 +27,9 @@ namespace LandonApi.Controllers
 
         [HttpGet(Name = nameof(GetAllRooms))]
         [ProducesResponseType(200)]
-        public async Task<ActionResult<Collection<Room>>> GetAllRooms([FromQuery]SortOptions<Room, RoomEntity> sortOptions)
+        public async Task<ActionResult<Collection<Room>>> GetAllRooms([FromQuery]SortOptions<Room, RoomEntity> sortOptions, [FromQuery] SearchOptions<Room, RoomEntity> searchOptions)
         {
-            var rooms = await _roomService.GetRoomsAsync(sortOptions);
+            var rooms = await _roomService.GetRoomsAsync(sortOptions, searchOptions);
 
             var collection = new Collection<Room>
             {
