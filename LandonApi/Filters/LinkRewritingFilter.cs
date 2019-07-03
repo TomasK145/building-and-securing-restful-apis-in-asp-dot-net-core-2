@@ -51,6 +51,11 @@ namespace LandonApi.Filters
 
             foreach (var linkProperty in linkProperties)
             {
+                if (!(linkProperty.GetValue(model) is Link))
+                {
+                    continue;
+                }
+
                 var rewritten = rewriter.Rewrite(linkProperty.GetValue(model) as Link);
                 if (rewritten == null)
                 {

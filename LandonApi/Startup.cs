@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 namespace LandonApi
@@ -34,9 +35,15 @@ namespace LandonApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<HotelInfo>(Configuration.GetSection("Info")); //zabezpeci vytvorenie a naplnneie objektu triedy "HotelInfo" s datami z appsettings.json suboru zo sekcie Info
+            services.Configure<HotelOptions>(Configuration);
+            services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
+
 
             //EF core triedy su casto Scoped, preto aj ine ktore s nimi interaguju by mali byt scoped
             services.AddScoped<IRoomService, DefaultRoomService>(); //definovanie pre DI, DefaultRoomService bude injektovane pre kazdy incomming request
+            services.AddScoped<IOpeningService, DefaultOpeningService>();
+            services.AddScoped<IBookingService, DefaultBookingService>();
+            services.AddScoped<IDateLogicService, DefaultDateLogicService>();
 
             //Use in-memory database for quick dev and testing
             //TODO: swap out for real DB in PROD
@@ -53,6 +60,10 @@ namespace LandonApi
                     .AddJsonOptions(options => 
                     {
                         options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                        // These should be the defaults, but we can be explicit:
+                        options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                        options.SerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
+                        options.SerializerSettings.DateParseHandling = DateParseHandling.DateTimeOffset;
 
                     });
 
@@ -77,6 +88,15 @@ namespace LandonApi
             });
 
             services.AddAutoMapper(options => options.AddProfile<MappingProfile>());
+
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = context => //uprava exception response pri nevalidnom stave
+                {
+                    var errorResponse = new ApiError(context.ModelState);
+                    return new BadRequestObjectResult(errorResponse);
+                };
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,4 +1,5 @@
 ﻿using LandonApi.Models;
+using LandonApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
@@ -10,10 +11,11 @@ namespace LandonApi
     {
         public static async Task InitializeAsync(IServiceProvider services)
         {
-            await AddTestDataAsync(services.GetRequiredService<HotelApiDbContext>()); //priklad injektovania potrebnej dependency
+            await AddTestDataAsync(services.GetRequiredService<HotelApiDbContext>(),
+                                    services.GetRequiredService<IDateLogicService>()); //priklad injektovania potrebnej dependency
         }
 
-        public static async Task AddTestDataAsync(HotelApiDbContext context) //zabezpecuje seedovanie DB
+        public static async Task AddTestDataAsync(HotelApiDbContext context, IDateLogicService dateLogicService) //zabezpecuje seedovanie DB
         {
             if (context.Rooms.Any())
             {
@@ -21,18 +23,32 @@ namespace LandonApi
                 return;
             }
 
-            context.Rooms.Add(new RoomEntity
+            var oxford = context.Rooms.Add(new RoomEntity
             {
                 Id = Guid.Parse("301df04d-8679-4b1b-ab92-0a586ae53d08"),
                 Name = "Oxford Suite",
                 Rate = 10119,
-            });
+            }).Entity;
 
             context.Rooms.Add(new RoomEntity
             {
                 Id = Guid.Parse("ee2b83be-91db-4de5-8122-35a9e9195976"),
                 Name = "Driscoll Suite",
                 Rate = 23959
+            });
+
+            var today = DateTimeOffset.Now;
+            var start = dateLogicService.AlignStartTime(today);
+            var end = start.Add(dateLogicService.GetMinimumStay());
+
+            context.Bookings.Add(new BookingEntity
+            {
+                Id = Guid.Parse("2eac8dea-2749-42b3-9d21-8eb2fc0fd6bd"),
+                Room = oxford,
+                CreatedAt = DateTimeOffset.UtcNow,
+                StartAt = start,
+                EndAt = end,
+                Total = oxford.Rate,
             });
 
             await context.SaveChangesAsync();

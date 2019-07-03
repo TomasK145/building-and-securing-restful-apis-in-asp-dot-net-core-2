@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using LandonApi.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +12,12 @@ namespace LandonApi.Services
     public class DefaultRoomService : IRoomService
     {
         private readonly HotelApiDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly IConfigurationProvider _mappingConfiguration;
 
-        public DefaultRoomService(HotelApiDbContext context, IMapper mapper)
+        public DefaultRoomService(HotelApiDbContext context, IConfigurationProvider mappingConfiguration)
         {
             _context = context;
-            _mapper = mapper;
+            _mappingConfiguration = mappingConfiguration;
         }
 
         public async Task<Room> GetRoomAsync(Guid id)
@@ -34,7 +35,14 @@ namespace LandonApi.Services
             //    Name = entity.Name,
             //    Rate = entity.Rate / 100.0m //v EF modely ulozene ako INT 
             //};
-            return _mapper.Map<Room>(entity);
+            var mapper = _mappingConfiguration.CreateMapper();
+            return mapper.Map<Room>(entity);
+        }
+
+        public async Task<IEnumerable<Room>> GetRoomsAsync()
+        {
+            var query = _context.Rooms.ProjectTo<Room>(_mappingConfiguration);
+            return await query.ToArrayAsync();
         }
     }
 }

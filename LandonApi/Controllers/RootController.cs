@@ -21,7 +21,7 @@ namespace LandonApi.Controllers
             {
                 //Href = null, //Url.Link(nameof(GetRoot), null), //generovanie absolute path
                 Self = Link.To(nameof(GetRoot)),
-                Rooms = Link.To(nameof(RoomsController.GetRooms)),
+                Rooms = Link.ToCollection(nameof(RoomsController.GetAllRooms)),
                 Info = Link.To(nameof(InfoController.GetInfo))
             };
             return Ok(response);
