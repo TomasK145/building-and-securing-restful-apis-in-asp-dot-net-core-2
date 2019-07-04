@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LandonApi.Infrastructure
@@ -50,6 +51,38 @@ namespace LandonApi.Infrastructure
             }
         }
 
+        internal IQueryable<TEntity> Apply(IQueryable<TEntity> query)
+        {
+            var terms = GetValidTerms().ToArray();
+
+            if (!terms.Any())
+            {
+                return query;
+            }
+            var modifiedQuery = query;
+            foreach (var term in terms)
+            {
+                var propertyInfo = ExpressionHelper.GetPropertyInfo<TEntity>(term.Name); //ziskanie PropertyInfo pre Property objektu (nazov property z Term.Name)
+                var obj = ExpressionHelper.Parameter<TEntity>(); //ziskanie referencie na entity model, pre ktory je property ziskavana
+
+                //build up the LINQ expression backwards
+                //query = query.Where(x => x.Property == "Value");
+                //ziskanie casti x.Property
+                var left = ExpressionHelper.GetPropertyExpression(obj, propertyInfo);
+                //ziskanie hodnoty "Value"
+                var right = term.ExpressionProvider.GetValue(term.Value);//Expression.Constant(term.Value);
+                //vytvorenie comparison --> x.Property == "Value"   
+                //var comparisonExpression = Expression.Equal(left, right);  --> umoznuje len vyuzit ==
+                var comparisonExpression = term.ExpressionProvider.GetComparison(left, term.Operator, right);
+                //vytvorenie lambda expression --> x => x.Property == "Value"
+                var lambdaExpression = ExpressionHelper.GetLambda<TEntity, bool>(obj, comparisonExpression);
+
+                //aplikovanie na query --> query = query.Where(x => x.Property == "Value");
+                modifiedQuery = ExpressionHelper.CallWhere(modifiedQuery, lambdaExpression);
+            }
+            return modifiedQuery;
+        }
+
         public IEnumerable<SearchTerm> GetValidTerms()
         {
             var queryTerms = GetAllTerms().Where(x => x.ValidSyntax).ToArray();
@@ -74,17 +107,21 @@ namespace LandonApi.Infrastructure
                     ValidSyntax = term.ValidSyntax,
                     Name = declaredTerm.Name,
                     Operator = term.Operator,
-                    Value = term.Value
+                    Value = term.Value,
+                    ExpressionProvider = declaredTerm.ExpressionProvider
                 };
             }
         }
 
         private static IEnumerable<SearchTerm> GetTermsFromModel()
         {
-            return typeof(TEntity).GetTypeInfo()
+            return typeof(T).GetTypeInfo()
                                     .DeclaredProperties
                                     .Where(p => p.GetCustomAttributes<SearchableAttribute>().Any())
-                                    .Select(p => new SearchTerm { Name = p.Name });
+                                    .Select(p => new SearchTerm {
+                                                                    Name = p.Name,
+                                                                    ExpressionProvider = p.GetCustomAttribute<SearchableAttribute>().ExpressionProvider
+                                                                });
         }
     }
 }

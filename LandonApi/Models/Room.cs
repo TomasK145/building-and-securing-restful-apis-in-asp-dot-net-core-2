@@ -12,7 +12,7 @@ namespace LandonApi.Models
         [Searchable] //custom atribut definuje ze property bude searchovatelna
         public string Name { get; set; }
         [Sortable(Default = true)] //property je oznacena ako default sort property
-        [Searchable]
+        [SearchableDecimal]
         public decimal Rate { get; set; }
     }
 }
