@@ -74,5 +74,13 @@ namespace LandonApi.Controllers
             }
             return room; //automaticky nastavuje response code na 200
         }
+
+        //POST /rooms/{roomId}/bookings
+        [HttpPost("{roomId}/bookings", Name = nameof(CreateBookingForRoom))]
+        public async Task<ActionResult> CreateBookingForRoom(Guid roomId, [FromBody] BookingForm bookingForm) //object je bindovany z body POST requestu
+        {
+            throw new NotImplementedException();
+            //2:58
+        }
     }
 }
