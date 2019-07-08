@@ -1,8 +1,4 @@
 ﻿using LandonApi.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandonApi.Models
 {
@@ -14,5 +10,7 @@ namespace LandonApi.Models
         [Sortable(Default = true)] //property je oznacena ako default sort property
         [SearchableDecimal]
         public decimal Rate { get; set; }
+
+        public Form Book { get; set; }
     }
 }

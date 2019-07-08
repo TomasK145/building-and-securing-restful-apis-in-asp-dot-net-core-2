@@ -10,5 +10,6 @@ namespace LandonApi.Infrastructure
     {
         ConstantExpression GetValue(string input);
         Expression GetComparison(MemberExpression left, string op, ConstantExpression right);
+        IEnumerable<string> GetOperators();
     }
 }

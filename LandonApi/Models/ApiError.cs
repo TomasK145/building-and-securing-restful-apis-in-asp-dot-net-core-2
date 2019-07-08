@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandonApi.Models
 {
@@ -11,6 +8,11 @@ namespace LandonApi.Models
         public ApiError()
         {
 
+        }
+
+        public ApiError(string message)
+        {
+            Message = message;
         }
 
         public ApiError(ModelStateDictionary modelState)

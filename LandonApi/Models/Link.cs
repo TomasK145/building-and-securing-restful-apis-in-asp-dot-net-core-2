@@ -10,6 +10,7 @@ namespace LandonApi.Models
     public class Link
     {
         public const string GetMethod = "GET";
+        public const string PostMethod = "POST";
 
         public static Link To(string routeName, object routeValues = null)
             => new Link
@@ -30,6 +31,19 @@ namespace LandonApi.Models
                 Relations = new[] { "collection" }
             };
         }
+
+        public static Link ToForm(
+            string routeName,
+            object routeValues = null,
+            string method = PostMethod,
+            params string[] relations)
+            => new Link
+            {
+                RouteName = routeName,
+                RouteValues = routeValues,
+                Method = method,
+                Relations = relations
+            };
 
         [JsonProperty(Order = -4)] //zabezpeci umistenie property vramci json objektu co najvyssie
         public string Href { get; set; }

@@ -11,7 +11,9 @@ namespace LandonApi.Infrastructure
 
             CreateMap<RoomEntity, Room>()
             .ForMember(dest => dest.Rate, opt => opt.MapFrom(src => src.Rate / 100.0m)) //mapping pre automapper
-            .ForMember(dest => dest.Self, opt => opt.MapFrom(src => Link.To(nameof(Controllers.RoomsController.GetRoomById), new { roomId = src.Id }))); //Url.Link()
+            .ForMember(dest => dest.Self, opt => opt.MapFrom(src => Link.To(nameof(Controllers.RoomsController.GetRoomById), new { roomId = src.Id }))) //Url.Link()
+            .ForMember(dest => dest.Book, opt => opt.MapFrom(src => FormMetadata.FromModel(new BookingForm()
+                , Link.ToForm(nameof(Controllers.RoomsController.CreateBookingForRoom), new { roomId = src.Id }, Link.PostMethod, Form.CreateRelation))));
 
             CreateMap<OpeningEntity, Opening>()
                 .ForMember(dest => dest.Rate, opt => opt.MapFrom(src => src.Rate / 100m))
