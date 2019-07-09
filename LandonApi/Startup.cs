@@ -52,6 +52,11 @@ namespace LandonApi
             //na poradi definovania servisou v tejto metode nazalezi
             services.AddMvc(options => 
                     {
+                        options.CacheProfiles.Add("Static", new CacheProfile //cachovanie je mozne definovat aj cez cache profile
+                        {
+                            Duration = 86400
+                        });
+
                         options.Filters.Add<JsonExceptionFilter>(); //zareferencovanie custom filtra
                         options.Filters.Add<RequireHttpsOrCloseAttribute>();
                         options.Filters.Add<LinkRewritingFilter>();
@@ -97,6 +102,8 @@ namespace LandonApi
                     return new BadRequestObjectResult(errorResponse);
                 };
             });
+
+            services.AddResponseCaching();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -119,6 +126,9 @@ namespace LandonApi
             }
 
             app.UseCors("AllowMyApp"); //applikovanie CORS policy, musi byt definovane pred middlewarom ktory vytvara response (pr. UseMVC)
+
+            //aplikuje rovnaky header caching atribut
+            app.UseResponseCaching(); //UseResponseCaching musi byt vramci pipeline nad inymi middleware ktore produkuju response (pr. MVC)
 
             //app.UseHttpsRedirection(); //zabezpecuje automaticky redirect ak sa klient snazi pristupovat na server cez HTTP port (redirect na HTTPS port)
             app.UseMvc();

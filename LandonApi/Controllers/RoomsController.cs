@@ -47,6 +47,8 @@ namespace LandonApi.Controllers
         [HttpGet("openings", Name = nameof(GetAllRoomOpenings))]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
+        [ResponseCache(Duration = 30, //pri nastaveni AddResponseCaching zabezpeci cachovanie aj na strane servera po dobu 30s
+            VaryByQueryKeys = new[] { "offset", "limit", "orderBy", "search" })]  //urcenie ze cachovanie sa bude lisit podla query stringu
         public async Task<ActionResult<Collection<Opening>>> GetAllRoomOpenings(
             [FromQuery]PagingOptions pagingOptions = null) //zadefinovanie ze hodnoty sa nachadzaju v query stringu
         {
