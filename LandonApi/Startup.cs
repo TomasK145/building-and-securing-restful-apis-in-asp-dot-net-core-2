@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNet.Security.OpenIdConnect.Primitives;
 using AutoMapper;
 using LandonApi.Filters;
 using LandonApi.Infrastructure;
@@ -20,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using OpenIddict.Validation;
 
 namespace LandonApi
 {
@@ -49,7 +51,44 @@ namespace LandonApi
 
             //Use in-memory database for quick dev and testing
             //TODO: swap out for real DB in PROD
-            services.AddDbContext<HotelApiDbContext>(options => options.UseInMemoryDatabase("landondb")); //pre DEV ucely je pouzita in-memory DB
+            services.AddDbContext<HotelApiDbContext>(options =>
+            {
+                options.UseInMemoryDatabase("landondb");
+                options.UseOpenIddict<Guid>();
+            }); //pre DEV ucely je pouzita in-memory DB
+
+            // Add OpenIddict services --> pridava OpenIddict server component, poskytuje token endpoint, a turning on the password flow
+            services.AddOpenIddict()
+                .AddCore(options =>
+                {
+                    options.UseEntityFrameworkCore()
+                        .UseDbContext<HotelApiDbContext>()
+                        .ReplaceDefaultEntities<Guid>();
+                })
+                .AddServer(options =>
+                {
+                    options.UseMvc();
+
+                    options.EnableTokenEndpoint("/token");
+
+                    options.AllowPasswordFlow();
+                    options.AcceptAnonymousClients();
+                })
+                .AddValidation();
+
+            //ASP.NET Core Identity should use the same claim names as OpenIddict
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
+                options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
+            });
+
+            services.AddAuthentication(options => 
+            {
+                options.DefaultScheme = OpenIddictValidationDefaults.AuthenticationScheme; //zabezpeci ze OpenIddict je defaultna autentifikacna schema pre celu aplikaciu
+            });
+
 
             //Add ASP.NET Core Identity
             AddIdentityCoreServices(services);
@@ -109,6 +148,11 @@ namespace LandonApi
             });
 
             services.AddResponseCaching();
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ViewAllUserPolicy", p => p.RequireAuthenticatedUser().RequireRole("Admin"));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -131,6 +175,8 @@ namespace LandonApi
             }
 
             app.UseCors("AllowMyApp"); //applikovanie CORS policy, musi byt definovane pred middlewarom ktory vytvara response (pr. UseMVC)
+
+            app.UseAuthentication();
 
             //aplikuje rovnaky header caching atribut
             app.UseResponseCaching(); //UseResponseCaching musi byt vramci pipeline nad inymi middleware ktore produkuju response (pr. MVC)

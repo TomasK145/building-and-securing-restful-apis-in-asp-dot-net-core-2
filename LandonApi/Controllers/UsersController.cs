@@ -16,13 +16,16 @@ namespace LandonApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly PagingOptions _defaultPagingOptions;
+        private readonly IAuthorizationService _authzService;
 
         public UsersController(
             IUserService userService,
-            IOptions<PagingOptions> defaultPagingOptions)
+            IOptions<PagingOptions> defaultPagingOptions,
+            IAuthorizationService authzService)
         {
             _userService = userService;
             _defaultPagingOptions = defaultPagingOptions.Value;
+            _authzService = authzService;
         }
 
         [HttpGet(Name = nameof(GetVisibleUsers))]
@@ -35,9 +38,24 @@ namespace LandonApi.Controllers
             pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
 
             // TODO: Authorization check. Is the user an admin?
+            var users = new PagedResults<User>();
+            if (User.Identity.IsAuthenticated)
+            {
+                var canSeeEveryone = await _authzService.AuthorizeAsync(User, "ViewAllUserPolicy"); //overenie autorizacie uzivatela voci custom authorization policy
+                if (canSeeEveryone.Succeeded)
+                {
+                    users = await _userService.GetUsersAsync(pagingOptions, sortOptions, searchOptions);
+                }
+                else
+                {
+                    var myself = await _userService.GetUserAsync(User);
+                    users.Items = new[] { myself };
+                    users.TotalSize = 1;
+                }
+            }
 
             // TODO: Return a collection of visible users
-            var users = await _userService.GetUsersAsync(pagingOptions, sortOptions, searchOptions);
+            //var 
             var collection = PagedCollection<User>.Create(Link.ToCollection(nameof(GetVisibleUsers)),
                                                             users.Items.ToArray(),
                                                             users.TotalSize,
@@ -65,7 +83,7 @@ namespace LandonApi.Controllers
             var (succeeded, message) = await _userService.CreateUserAsync(form);
             if (succeeded)
             {
-                return Created("todo", null);
+                return Created(Url.Link(nameof(UserInfoController.UserInfo), null), null);
             }
 
             return BadRequest(new ApiError
