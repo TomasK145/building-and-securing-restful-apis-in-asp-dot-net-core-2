@@ -10,6 +10,7 @@ using LandonApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
@@ -44,10 +45,14 @@ namespace LandonApi
             services.AddScoped<IOpeningService, DefaultOpeningService>();
             services.AddScoped<IBookingService, DefaultBookingService>();
             services.AddScoped<IDateLogicService, DefaultDateLogicService>();
+            services.AddScoped<IUserService, DefaultUserService>();
 
             //Use in-memory database for quick dev and testing
             //TODO: swap out for real DB in PROD
             services.AddDbContext<HotelApiDbContext>(options => options.UseInMemoryDatabase("landondb")); //pre DEV ucely je pouzita in-memory DB
+
+            //Add ASP.NET Core Identity
+            AddIdentityCoreServices(services);
 
             //na poradi definovania servisou v tejto metode nazalezi
             services.AddMvc(options => 
@@ -132,6 +137,17 @@ namespace LandonApi
 
             //app.UseHttpsRedirection(); //zabezpecuje automaticky redirect ak sa klient snazi pristupovat na server cez HTTP port (redirect na HTTPS port)
             app.UseMvc();
+        }
+
+
+        private static void AddIdentityCoreServices(IServiceCollection services)
+        {
+            var builder = services.AddIdentityCore<UserEntity>();
+            builder = new IdentityBuilder(builder.UserType, typeof(UserRoleEntity), builder.Services);
+            builder.AddRoles<UserRoleEntity>()
+                    .AddEntityFrameworkStores<HotelApiDbContext>()
+                    .AddDefaultTokenProviders()
+                    .AddSignInManager<SignInManager<UserEntity>>();
         }
     }
 }

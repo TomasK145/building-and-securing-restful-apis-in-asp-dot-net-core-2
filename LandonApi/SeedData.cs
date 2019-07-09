@@ -1,5 +1,6 @@
 ﻿using LandonApi.Models;
 using LandonApi.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace LandonApi
     {
         public static async Task InitializeAsync(IServiceProvider services)
         {
+            await AddTestUsers(services.GetRequiredService<RoleManager<UserRoleEntity>>(), services.GetRequiredService<UserManager<UserEntity>>());
+
             await AddTestDataAsync(services.GetRequiredService<HotelApiDbContext>(),
                                     services.GetRequiredService<IDateLogicService>()); //priklad injektovania potrebnej dependency
         }
@@ -52,6 +55,34 @@ namespace LandonApi
             });
 
             await context.SaveChangesAsync();
+        }
+
+        private static async Task AddTestUsers(RoleManager<UserRoleEntity> roleManager, UserManager<UserEntity> userManager)
+        {
+            var dataExists = roleManager.Roles.Any() || userManager.Users.Any();
+            if (dataExists)
+            {
+                return;
+            }
+
+            //add a test role
+            await roleManager.CreateAsync(new UserRoleEntity("Admin"));
+
+            //add a test user
+            var user = new UserEntity
+            {
+                Email = "admin@landon.local",
+                UserName = "admin@landon.local",
+                FirstName = "Admin",
+                LastName = "Tester",
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            await userManager.CreateAsync(user, "123456?Aa");
+
+            //put the user in the admin role
+            await userManager.AddToRoleAsync(user, "Admin");
+            
+            await userManager.UpdateAsync(user);
         }
     }
 }
